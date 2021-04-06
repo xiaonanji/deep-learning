@@ -136,27 +136,27 @@ def run(df, fold):
     xtrain = tokenizer.texts_to_sequences(train_df.review.values)
     xtest = tokenizer.texts_to_sequences(valid_df.review.values)
     
-    xtrain = tf.keras.preprocessing.sequence.pad_sequences(xtrain, maxlen=MAX_LEN)
-    xtest = tf.keras.preprocessing.sequence.pad_sequences(xtest, maxlen=MAX_LEN)
+    xtrain = tf.keras.preprocessing.sequence.pad_sequences(xtrain, maxlen=config.MAX_LEN)
+    xtest = tf.keras.preprocessing.sequence.pad_sequences(xtest, maxlen=config.MAX_LEN)
     
-    train_dataset = IMDBDataset(
+    train_dataset = imdb_dataset.IMDBDataset(
         reviews=xtrain,
         targets=train_df.sentiment.values
     )
     
     train_data_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=TRAIN_BATCH_SIZE,
+        batch_size=config.TRAIN_BATCH_SIZE,
     )
     
-    valid_dataset = IMDBDataset(
+    valid_dataset = imdb_dataset.IMDBDataset(
         reviews=xtest,
         targets=valid_df.sentiment.values
     )
     
     valid_data_loader = torch.utils.data.DataLoader(
         valid_dataset,
-        batch_size=VALID_BATCH_SIZE,
+        batch_size = config.VALID_BATCH_SIZE,
     )
     
     print('Loading embedding vectors...')
@@ -167,13 +167,13 @@ def run(df, fold):
     print('Embedding vectors loaded')
     
     device = torch.device('cpu')
-    model = LSTM(embedding_matrix)
+    model = lstm.LSTM(embedding_matrix)
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     
     best_accuracy = 0
     early_stopping_counter = 0
-    for epoch in range(EPOCHS):
+    for epoch in range(config.EPOCHS):
         train(train_data_loader, model, optimizer, device)
         outputs, targets = evaluate(valid_data_loader, model, device)
         outputs = np.array(outputs) >= 0.5
